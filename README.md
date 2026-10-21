@@ -116,6 +116,11 @@ Add `--pca --umap` for the projections of the salient codes.
 
 `tests/` checks that this code computes exactly what the original research code computed (see `tests/README.md`).
 
+## License
+
+The code is released under the MIT License (see `LICENSE`). The datasets (FFHQ, CelebA-HQ, AFHQ, BraTS) and the
+pretrained weights it uses (DINOv3, the VQ and KL autoencoders, CLIP) keep their own licenses and terms of use.
+
 ## Citation
 
 ```bibtex
