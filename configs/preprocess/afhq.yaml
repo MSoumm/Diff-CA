@@ -1,0 +1,17 @@
+# python -m diffca.stage1.preprocess --config configs/preprocess/afhq.yaml
+# AFHQ: KL scaling factor (the AFHQ Stage 1 model computes its features online).
+train_path: "data/afhq/train"        # the scaling factor (ae_config.json) is computed on this split
+test_path: "data/afhq/val"
+output_path: "features/afhq"
+batch_size: 64
+
+ae_type: "AutoencoderKL"
+ae_path: "stabilityai/sd-vae-ft-mse"
+save_ae: true
+display_metrics: true
+
+save_dino: true
+dino_type: "DINOv3"
+dino_path: "facebook/dinov3-vitb16-pretrain-lvd1689m"
+
+use_h5: false

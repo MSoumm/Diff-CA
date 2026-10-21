@@ -1,0 +1,17 @@
+# python -m diffca.stage1.preprocess --config configs/preprocess/ffhq_clip.yaml
+# FFHQ: CLIP tokens for the CLIP baseline.
+train_path: "data/ffhq256/train"        # the scaling factor (ae_config.json) is computed on this split
+test_path: "data/ffhq256/test"
+output_path: "features/ffhq_clip"
+batch_size: 64
+
+ae_type: "VQModel"
+ae_path: "pretrained/ldm-celebahq-256/vqvae"
+save_ae: true
+display_metrics: true
+
+save_dino: true
+dino_type: "CLIP"
+dino_path: "openai/clip-vit-base-patch16"
+
+use_h5: false

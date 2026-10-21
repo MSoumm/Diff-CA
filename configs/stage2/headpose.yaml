@@ -1,0 +1,53 @@
+# Stage 2: python -m diffca.stage2.train --config_yaml configs/stage2/headpose.yaml
+# FFHQ head pose. Background: |yaw| <= 5 deg; target: |yaw| > 12 deg (in between excluded).
+# Command-line flags override these values.
+
+# --- Data: tokens from stage1.extract_features, labels ---
+train_pt_folder: "runs/stage1/ffhq_cqc/extracted_features/step-300000/train"
+test_pt_folder: "runs/stage1/ffhq_cqc/extracted_features/step-300000/test"
+attribute: "headPose"
+json_folder: "data/ffhq-features-dataset/json"     # FFHQ-Features-Dataset attributes
+output_dir: "runs/stage2/headpose"
+referee_classifier_path: "runs/classifiers/headPose_classifier.pt"   # from stage2.train_classifier
+resume_from_checkpoint: null
+test_epoch: false
+
+# --- Optimization ---
+epochs: 1000
+batch_size: 1024
+learning_rate: 0.0001
+adversary_lr: 0.00001
+mixed_precision: "bf16"
+seed: 42
+max_grad_norm: 1.0
+
+# --- Separator: 5-layer Transformer encoder, additive decoder with a rank-128 salient map ---
+model_type: "token_disentangler"
+num_encoder_layers: 5
+num_decoder_layers: 0
+low_rank: 128
+ema_decay: 0                    # the evaluation EMA equals the online weights
+cycle_ema_decay: 0.99           # encoder used to re-encode the swaps in the cycle loss
+
+# --- Losses ---
+lambda_recon: 10.0
+lambda_norm_pos: 0.1             # exp(-||h||^2) on target samples (Y=1)
+lambda_norm_neg: 1              # pinning ||h||^2 on background samples (Y=0)
+lambda_cycle_context: 1
+lambda_cycle_cls: 1
+lambda_adv: 1
+low_target_acc: 0.74            # adversary accuracy kept at this value by the self-tuning GRL
+high_target_acc: 0.74
+
+# --- Stage 1 model, to decode swaps (--test_epoch --generate_all_images / --interpolate) ---
+config_file: "runs/stage1/ffhq_cqc/config_saved.yaml"
+save_dir: "runs/stage1/ffhq_cqc"
+global_step: 300000
+no_generate_images: true        # do not load it while training
+
+# --- Monitoring ---
+umap: false
+pca: false
+wandb_project: "attribute-disentanglement"
+wandb_mode: "offline"
+wandb_id: null

@@ -1,0 +1,17 @@
+# python -m diffca.stage1.preprocess --config configs/preprocess/ffhq.yaml
+# FFHQ: VQ latents + DINOv3 tokens for the cached FFHQ configs, and the VQ scaling factor.
+train_path: "data/ffhq256/train"        # the scaling factor (ae_config.json) is computed on this split
+test_path: "data/ffhq256/test"
+output_path: "features/ffhq"
+batch_size: 64
+
+ae_type: "VQModel"
+ae_path: "pretrained/ldm-celebahq-256/vqvae"
+save_ae: true
+display_metrics: true
+
+save_dino: true
+dino_type: "DINOv3"
+dino_path: "facebook/dinov3-vitb16-pretrain-lvd1689m"
+
+use_h5: false

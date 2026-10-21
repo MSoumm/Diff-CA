@@ -1,0 +1,70 @@
+# Stage 1: python -m diffca.stage1.train --config configs/stage1/ffhq_clip.yaml
+# FFHQ, baseline conditioning: all 198 CLIP ViT-B/16 tokens, linearly projected to d=128. Tested on CelebA-HQ.
+experiment_id: "ffhq_clip"
+output_dir: "runs/stage1/ffhq_clip"
+mixed_precision: "bf16"
+seed: 42
+
+data:
+  dataset_path:
+    train: "data/ffhq256/train"
+    test: "data/celebahq"
+  batch_size: 64
+  num_workers: 20
+  quick_eval_size: 1000
+  fid_eval_size: 1000
+  use_cached_features: true       # VAE latents and backbone tokens from preprocess.py
+  type: "CLIP"            # read clip_features/ instead of dino_features/
+  cache_paths:
+    train: "features/ffhq_clip/train"
+    test: "features/celebahq_clip/test"
+
+augmentations:                    # only possible with use_cached_features: false
+  enable: false                   # color augmentations below
+  drop_dino: false                # drop the DINOv3 tokens with probability max(0, 1 - t / 0.3)
+  geometric:
+    enable: false                 # random vertical flip + resized crop (scale 0.9-1)
+  transforms:
+    - name: "RandomGrayscale"
+      params: { p: 0.5 }
+    - name: "ColorJitter"
+      params: { brightness: 0.5, contrast: 0.5, saturation: 0.5, hue: 0.2 }
+      random_apply_p: 0.8
+
+model:
+  unet_config:                    # diffusers UNet2DConditionModel
+    sample_size: 64
+    in_channels: 3
+    out_channels: 3
+    norm_eps: 1.0e-05
+    layers_per_block: 2
+    norm_num_groups: 32
+    act_fn: "silu"
+    block_out_channels: [128, 256, 512, 512]
+    cross_attention_dim: 128      # = token dimension d
+    attention_head_dim: 64
+    dropout: 0.1
+    down_block_types: ["DownBlock2D", "CrossAttnDownBlock2D", "CrossAttnDownBlock2D", "CrossAttnDownBlock2D"]
+    up_block_types: ["CrossAttnUpBlock2D", "CrossAttnUpBlock2D", "CrossAttnUpBlock2D", "UpBlock2D"]
+  image_encoder:
+    type: "DinoEncoder"
+    n_tokens: 198                 # only used by the profiling printout
+    embedding_dim: 768
+    output_dim: 128
+
+vae:
+  type: "VQModel"
+  pretrained_path: "pretrained/ldm-celebahq-256/vqvae"      # vqvae/ subfolder of CompVis/ldm-celebahq-256
+  config_path: "features/ffhq/ae_config.json"                 # written by preprocess.py (latent scaling factor)
+
+training:
+  num_steps: 300000
+  base_lr: 1.0e-4
+  max_grad_norm: 1.0
+  weight_decay: 0.01
+  save_every_steps: 5000
+  quick_eval_every_steps: 5000      # LPIPS/SSIM/DISTS/PSNR on data.quick_eval_size test images
+  fid_eval_every_steps: 99999999    # + FID/FD-DINO/KID on data.fid_eval_size images (off during training)
+
+sampling:
+  num_inference_steps: 25           # Euler steps

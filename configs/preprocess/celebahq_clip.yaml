@@ -1,0 +1,16 @@
+# python -m diffca.stage1.preprocess --config configs/preprocess/celebahq_clip.yaml
+# CelebA-HQ: CLIP tokens for the CLIP baseline.
+test_path: "data/celebahq"
+output_path: "features/celebahq_clip"
+batch_size: 64
+
+ae_type: "VQModel"
+ae_path: "pretrained/ldm-celebahq-256/vqvae"
+save_ae: true
+display_metrics: true
+
+save_dino: true
+dino_type: "CLIP"
+dino_path: "openai/clip-vit-base-patch16"
+
+use_h5: false
